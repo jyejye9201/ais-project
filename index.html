@@ -2,15 +2,933 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>AI실습플랫폼 프로토타입</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI실습플랫폼 권한 설계 문서</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            font-size: 32px;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 15px;
+        }
+        
+        .version {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-left: 4px solid #4CAF50;
+            padding-left: 12px;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .role-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .role-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .role-card.learner { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .role-card.instructor { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .role-card.pm { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .role-card.edu-manager { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .role-card.sys-admin { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        
+        .role-card h4 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .role-card p {
+            font-size: 14px;
+            opacity: 0.95;
+            margin-bottom: 8px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .access-level {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .use { background: #e3f2fd; color: #1976d2; }
+        .view { background: #f3e5f5; color: #7b1fa2; }
+        .manage { background: #e8f5e9; color: #388e3c; }
+        .config { background: #fff3e0; color: #f57c00; }
+        .master { background: #fce4ec; color: #c2185b; }
+        .no-access { background: #f5f5f5; color: #9e9e9e; }
+        
+        .check { color: #4CAF50; font-weight: bold; }
+        .cross { color: #f44336; font-weight: bold; }
+        
+        .module-structure {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .module-structure ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+        
+        .module-structure li {
+            padding: 8px 0;
+            position: relative;
+        }
+        
+        .module-structure li:before {
+            content: "▸";
+            position: absolute;
+            left: -15px;
+            color: #4CAF50;
+        }
+        
+        .required {
+            color: #f44336;
+            font-weight: 600;
+        }
+        
+        .optional {
+            color: #2196F3;
+            font-weight: 600;
+        }
+        
+        .note-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .note-box strong {
+            color: #856404;
+        }
+        
+        .special-rule {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .special-rule h4 {
+            color: #721c24;
+            margin-bottom: 10px;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            padding: 5px 0;
+        }
+        
+        .toc a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>AI실습플랫폼 권한별 화면</h1>
-    <ul>
-        <li><a href="instructor_professional.html">강사 화면</a></li>
-        <li><a href="pm_redesigned.html">PM/운영자 화면</a></li>
-        <li><a href="edu_manager_redesigned.html">교육담당자 화면</a></li>
-        <li><a href="system_admin_redesigned.html">시스템 관리자 화면</a></li>
-    </ul>
+    <div class="container">
+        <h1>🎓 AI실습플랫폼 권한 설계 문서</h1>
+        <p class="version">버전 2.0 | 최종 수정일: 2025년 12월</p>
+        
+        <div class="toc">
+            <h3>📑 목차</h3>
+            <ul>
+                <li><a href="#overview">1. 권한 체계 개요</a></li>
+                <li><a href="#role-definition">2. 권한별 역할 정의</a></li>
+                <li><a href="#learner-lnb">3. 학습자 화면 LNB 권한</a></li>
+                <li><a href="#admin-lnb">4. 관리자 화면 LNB 권한</a></li>
+                <li><a href="#module-config">5. 모듈 선택 구조</a></li>
+                <li><a href="#special-rules">6. 특별 권한 규칙</a></li>
+                <li><a href="#db-design">7. 데이터베이스 설계</a></li>
+            </ul>
+        </div>
+
+        <h2 id="overview">1. 권한 체계 개요</h2>
+        <p>AI실습플랫폼은 <strong>5가지 권한</strong>으로 구성되며, 과정별 접근 제어와 모듈별 기능 제어를 통해 유연한 권한 관리를 지원합니다.</p>
+        
+        <div class="role-overview">
+            <div class="role-card learner">
+                <h4>👨‍🎓 학습자</h4>
+                <p><strong>역할:</strong> 학습 활동 참여</p>
+                <p><strong>범위:</strong> 본인 수강 과정</p>
+                <p><strong>목적:</strong> 학습</p>
+            </div>
+            
+            <div class="role-card instructor">
+                <h4>👨‍🏫 강사</h4>
+                <p><strong>역할:</strong> 과정 운영 및 학습 관리</p>
+                <p><strong>범위:</strong> 담당 과정</p>
+                <p><strong>목적:</strong> 교육 운영</p>
+            </div>
+            
+            <div class="role-card pm">
+                <h4>👔 PM/운영자</h4>
+                <p><strong>역할:</strong> 과정 전체 관리</p>
+                <p><strong>범위:</strong> 관리 과정</p>
+                <p><strong>목적:</strong> 과정 기획/운영</p>
+            </div>
+            
+            <div class="role-card edu-manager">
+                <h4>📊 교육담당자</h4>
+                <p><strong>역할:</strong> 교육 성과 분석</p>
+                <p><strong>범위:</strong> 소속 회사 전체 과정</p>
+                <p><strong>목적:</strong> 교육 ROI 측정</p>
+            </div>
+            
+            <div class="role-card sys-admin">
+                <h4>⚙️ 시스템 관리자</h4>
+                <p><strong>역할:</strong> 플랫폼 인프라 관리</p>
+                <p><strong>범위:</strong> 전체 시스템</p>
+                <p><strong>목적:</strong> 시스템 운영</p>
+            </div>
+        </div>
+
+        <h2 id="role-definition">2. 권한별 역할 정의</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>권한</th>
+                    <th>역할</th>
+                    <th>접근 범위</th>
+                    <th>주요 목적</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>학습자</strong></td>
+                    <td>학습 활동 참여</td>
+                    <td>본인이 수강하는 과정</td>
+                    <td>학습</td>
+                </tr>
+                <tr>
+                    <td><strong>강사</strong></td>
+                    <td>과정 운영 및 학습 관리</td>
+                    <td>본인이 담당하는 과정</td>
+                    <td>교육 운영</td>
+                </tr>
+                <tr>
+                    <td><strong>PM/운영자</strong></td>
+                    <td>과정 전체 관리</td>
+                    <td>본인이 관리하는 과정</td>
+                    <td>과정 기획/운영</td>
+                </tr>
+                <tr>
+                    <td><strong>교육담당자</strong></td>
+                    <td>교육 성과 분석</td>
+                    <td>소속 회사의 모든 과정</td>
+                    <td>교육 ROI 측정</td>
+                </tr>
+                <tr>
+                    <td><strong>시스템 관리자</strong></td>
+                    <td>플랫폼 인프라 관리</td>
+                    <td>전체 시스템</td>
+                    <td>시스템 운영</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>권한 레벨 정의</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>레벨</th>
+                    <th>설명</th>
+                    <th>예시</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="access-level use">사용(Use)</span></td>
+                    <td>기능 실행만 가능</td>
+                    <td>학습자의 AI 도구 사용</td>
+                </tr>
+                <tr>
+                    <td><span class="access-level view">조회(View)</span></td>
+                    <td>데이터 열람만 가능</td>
+                    <td>교육담당자의 학습 통계 조회</td>
+                </tr>
+                <tr>
+                    <td><span class="access-level manage">관리(Manage)</span></td>
+                    <td>생성/수정/삭제 가능</td>
+                    <td>강사의 과제 관리</td>
+                </tr>
+                <tr>
+                    <td><span class="access-level config">설정(Config)</span></td>
+                    <td>환경 구성 변경 가능</td>
+                    <td>강사의 VM 설정</td>
+                </tr>
+                <tr>
+                    <td><span class="access-level master">마스터(Master)</span></td>
+                    <td>전체 템플릿/정책 관리</td>
+                    <td>시스템 관리자의 라이브러리 관리</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="learner-lnb">3. 학습자 화면 LNB 권한 매트릭스</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>메뉴</th>
+                    <th>학습자</th>
+                    <th>강사</th>
+                    <th>PM/운영자</th>
+                    <th>교육담당자</th>
+                    <th>시스템관리자</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>AI 도구</strong></td>
+                    <td><span class="access-level use">사용</span></td>
+                    <td><span class="access-level config">사용+설정</span></td>
+                    <td><span class="access-level config">사용+설정</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level master">마스터 관리</span></td>
+                    <td>시스템: AI 툴 리스트 관리</td>
+                </tr>
+                <tr>
+                    <td><strong>IDE</strong></td>
+                    <td><span class="access-level use">사용</span></td>
+                    <td><span class="access-level manage">사용+모니터링</span></td>
+                    <td><span class="access-level use">사용</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level master">라이브러리 관리</span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>VM</strong></td>
+                    <td><span class="access-level use">사용</span></td>
+                    <td><span class="access-level config">사용+설정</span></td>
+                    <td><span class="access-level config">사용+설정</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level master">인프라 관리</span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>학습자료</strong></td>
+                    <td><span class="access-level view">조회/다운</span></td>
+                    <td><span class="access-level manage">업로드/수정</span></td>
+                    <td><span class="access-level manage">업로드/수정</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td>필수 모듈</td>
+                </tr>
+                <tr>
+                    <td><strong>과제 제출</strong></td>
+                    <td><span class="access-level use">제출</span></td>
+                    <td><span class="access-level manage">채점/피드백</span></td>
+                    <td><span class="access-level view">조회</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td>필수 모듈</td>
+                </tr>
+                <tr>
+                    <td><strong>평가</strong></td>
+                    <td><span class="access-level use">응시</span></td>
+                    <td><span class="access-level manage">출제/채점</span></td>
+                    <td><span class="access-level view">조회</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td>강사 주도 세팅</td>
+                </tr>
+                <tr>
+                    <td><strong>설문</strong></td>
+                    <td><span class="access-level use">응답</span></td>
+                    <td><span class="access-level no-access">조회 불가</span></td>
+                    <td><span class="access-level manage">생성/수정/결과</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td>운영자 주도, 강사 만족도 포함</td>
+                </tr>
+                <tr>
+                    <td><strong>공지사항</strong></td>
+                    <td><span class="access-level view">조회</span></td>
+                    <td><span class="access-level view">조회</span></td>
+                    <td><span class="access-level manage">작성/수정(과정)</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level manage">작성/수정(시스템)</span></td>
+                    <td>과정별 vs 시스템 공지 구분</td>
+                </tr>
+                <tr>
+                    <td><strong>채팅</strong></td>
+                    <td><span class="access-level use">참여</span></td>
+                    <td><span class="access-level use">참여</span></td>
+                    <td><span class="access-level use">참여</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level config">워크스페이스 설정</span></td>
+                    <td>실시간 소통, 필수 모듈</td>
+                </tr>
+                <tr>
+                    <td><strong>AI Tutor</strong></td>
+                    <td><span class="access-level use">사용</span></td>
+                    <td><span class="access-level use">사용</span></td>
+                    <td><span class="access-level use">사용</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level config">설정/관리</span></td>
+                    <td>학습 지원 챗봇, 필수 모듈</td>
+                </tr>
+                <tr>
+                    <td><strong>강사 화면</strong></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level use">뷰 전환</span></td>
+                    <td><span class="access-level use">뷰 전환</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td><span class="access-level no-access">-</span></td>
+                    <td>학습자 화면 확인용</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="admin-lnb">4. 관리자 화면 LNB 권한 매트릭스</h2>
+        
+        <h3>4-1. 강의 운영</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>메뉴</th>
+                    <th>강사</th>
+                    <th>PM/운영자</th>
+                    <th>교육담당자</th>
+                    <th>시스템관리자</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>대시보드</strong></td>
+                    <td><span class="check">✓</span> (과정별)</td>
+                    <td><span class="check">✓</span> (과정별)</td>
+                    <td><span class="check">✓</span> (회사별 통합)</td>
+                    <td><span class="check">✓</span> (시스템 전체)</td>
+                </tr>
+                <tr>
+                    <td><strong>학습자 현황</strong></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="check">✓</span> (회사 소속)</td>
+                    <td><span class="cross">-</span></td>
+                </tr>
+                <tr>
+                    <td><strong>학습 통계</strong></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="check">✓</span> (ROI 분석)</td>
+                    <td><span class="cross">-</span></td>
+                </tr>
+                <tr>
+                    <td><strong>과정 간 비교 분석</strong></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="cross">-</span></td>
+                </tr>
+                <tr>
+                    <td><strong>학습자 학습 추이</strong></td>
+                    <td><span class="check">✓</span> (과정 내)</td>
+                    <td><span class="check">✓</span> (과정 내)</td>
+                    <td><span class="check">✓</span> (회사 전체)</td>
+                    <td><span class="cross">-</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>4-2. 콘텐츠 관리</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>메뉴</th>
+                    <th>강사</th>
+                    <th>PM/운영자</th>
+                    <th>교육담당자</th>
+                    <th>시스템관리자</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>학습자료 관리</strong></td>
+                    <td><span class="check">✓</span> (생성/수정)</td>
+                    <td><span class="check">✓</span> (전체 관리)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>과제 관리</strong></td>
+                    <td><span class="check">✓</span> (생성/채점)</td>
+                    <td><span class="check">✓</span> (전체 관리)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>평가 관리</strong></td>
+                    <td><span class="check">✓</span> (생성/채점)</td>
+                    <td><span class="check">✓</span> (조회)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td>강사 주도</td>
+                </tr>
+                <tr>
+                    <td><strong>설문 관리</strong></td>
+                    <td><span class="cross">조회 불가</span></td>
+                    <td><span class="check">✓</span> (생성/수정/결과)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td>운영자 주도</td>
+                </tr>
+                <tr>
+                    <td><strong>공지사항 관리</strong></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span> (과정별)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span> (시스템)</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>강사 화면 관리</strong></td>
+                    <td><span class="check">✓</span> (본인 과정)</td>
+                    <td><span class="check">✓</span> (전체 과정)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>4-3. 실습 환경</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>메뉴</th>
+                    <th>강사</th>
+                    <th>PM/운영자</th>
+                    <th>교육담당자</th>
+                    <th>시스템관리자</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>IDE(강사용)</strong></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>학습자 코드 모니터링</strong></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>VM 설정</strong></td>
+                    <td><span class="check">✓</span> (과정별)</td>
+                    <td><span class="check">✓</span> (과정별)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span> (템플릿)</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>라이브러리 관리</strong></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>AI 도구 연동 설정</strong></td>
+                    <td><span class="check">✓</span> (과정별 선택)</td>
+                    <td><span class="check">✓</span> (과정별 선택)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span> (마스터 리스트)</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>AI Tutor 설정</strong></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>4-4. 화면 설정</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>메뉴</th>
+                    <th>강사</th>
+                    <th>PM/운영자</th>
+                    <th>교육담당자</th>
+                    <th>시스템관리자</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>학습자 레이아웃</strong></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="cross">-</span></td>
+                </tr>
+                <tr>
+                    <td><strong>리소스 모니터링</strong></td>
+                    <td><span class="check">✓</span> (본인 과정)</td>
+                    <td><span class="check">✓</span> (본인 과정)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span> (전체 시스템)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>4-5. 커뮤니케이션</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>메뉴</th>
+                    <th>강사</th>
+                    <th>PM/운영자</th>
+                    <th>교육담당자</th>
+                    <th>시스템관리자</th>
+                    <th>비고</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>채팅 관리</strong></td>
+                    <td><span class="check">✓</span> (참여)</td>
+                    <td><span class="check">✓</span> (참여)</td>
+                    <td><span class="cross">-</span></td>
+                    <td><span class="check">✓</span> (워크스페이스 생성/초대)</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="module-config">5. 모듈 선택 구조</h2>
+        
+        <div class="module-structure">
+            <h3>과정 생성 시 모듈 선택</h3>
+            <ul>
+                <li><span class="required">필수 모듈</span>
+                    <ul>
+                        <li>학습자료</li>
+                        <li>과제</li>
+                        <li>채팅</li>
+                        <li>AI Tutor</li>
+                    </ul>
+                </li>
+                <li><span class="optional">선택 모듈</span>
+                    <ul>
+                        <li>AI 도구</li>
+                        <li>IDE</li>
+                        <li>VM</li>
+                        <li>평가</li>
+                        <li>설문</li>
+                        <li>공지사항</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <h3>모듈 선택에 따른 메뉴 표시 로직</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>사용자 유형</th>
+                    <th>메뉴 표시 규칙</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>학습자</strong></td>
+                    <td>해당 과정에서 활성화된 모듈만 LNB에 표시</td>
+                </tr>
+                <tr>
+                    <td><strong>강사</strong></td>
+                    <td>
+                        • 학습자 화면: 활성화된 모듈만 표시<br>
+                        • 관리 화면: 활성화된 모듈의 관리 메뉴만 표시
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>PM/운영자</strong></td>
+                    <td>활성화된 모듈의 관리 메뉴만 표시</td>
+                </tr>
+                <tr>
+                    <td><strong>교육담당자</strong></td>
+                    <td>모듈과 무관하게 통합 대시보드/리포트만 접근</td>
+                </tr>
+                <tr>
+                    <td><strong>시스템 관리자</strong></td>
+                    <td>전체 모듈 설정 메뉴 항상 표시</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="special-rules">6. 특별 권한 규칙</h2>
+        
+        <div class="special-rule">
+            <h4>🚫 1. 설문 결과 접근 제한</h4>
+            <ul>
+                <li>강사는 설문 결과 조회 <strong>불가</strong> (강사 만족도 포함)</li>
+                <li>PM/운영자만 전체 설문 결과 조회 가능</li>
+                <li>DB 레벨에서 강사 role은 <code>survey_result</code> 테이블 조회 권한 없음</li>
+            </ul>
+        </div>
+
+        <div class="special-rule">
+            <h4>📢 2. 공지사항 레벨 구분</h4>
+            <ul>
+                <li><strong>과정별 공지</strong>: PM/운영자 작성, 해당 과정 참여자만 조회</li>
+                <li><strong>시스템 공지</strong>: 시스템 관리자 작성, 전체 사용자 조회</li>
+            </ul>
+        </div>
+
+        <div class="special-rule">
+            <h4>💬 3. 채팅 워크스페이스 관리</h4>
+            <ul>
+                <li>시스템 관리자: 과정별 워크스페이스 생성 + 참여자 일괄 초대</li>
+                <li>강사/운영자/학습자: 초대된 워크스페이스 참여만 가능</li>
+            </ul>
+        </div>
+
+        <div class="special-rule">
+            <h4>👁️ 4. 강사 화면 전환</h4>
+            <ul>
+                <li>강사/운영자는 "학습자 화면 보기" 기능으로 뷰 전환</li>
+                <li>전환 시에도 본인 권한 유지 (학습자 권한으로 다운그레이드 안 됨)</li>
+                <li>채팅은 학습자 화면에서만 참여</li>
+            </ul>
+        </div>
+
+        <div class="note-box">
+            <strong>📌 교육담당자 전용 기능</strong><br>
+            교육담당자는 소속 회사의 교육 ROI 측정을 위해 다음 데이터를 조회할 수 있습니다:
+            <ul style="margin-top: 10px;">
+                <li>여러 과정의 학습 현황/통계 조회</li>
+                <li>과정 간 비교 분석 대시보드</li>
+                <li>학습자의 학습 추이 (회사 전체)</li>
+                <li>학습자/강사 활동 리포트</li>
+                <li>강사 만족도 (설문 결과)</li>
+            </ul>
+        </div>
+
+        <h2 id="db-design">7. 데이터베이스 설계 고려사항</h2>
+        
+        <h3>7-1. 권한 테이블 구조</h3>
+        <pre style="background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto;">
+-- 권한 마스터
+CREATE TABLE role_master (
+    role_id INT PRIMARY KEY AUTO_INCREMENT,
+    role_name VARCHAR(50) NOT NULL, -- 'LEARNER', 'INSTRUCTOR', 'PM_OPERATOR', 'EDU_MANAGER', 'SYS_ADMIN'
+    role_type VARCHAR(20) NOT NULL, -- 'COURSE_LEVEL' | 'COMPANY_LEVEL' | 'SYSTEM_LEVEL'
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- 향후 PM과 OPERATOR 분리 대비
+    parent_role_id INT,
+    FOREIGN KEY (parent_role_id) REFERENCES role_master(role_id)
+);
+
+-- 과정별 권한 할당
+CREATE TABLE course_role_assignment (
+    assignment_id INT PRIMARY KEY AUTO_INCREMENT,
+    course_id INT NOT NULL,
+    user_id INT NOT NULL,
+    role_id INT NOT NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    assigned_by INT,
+    FOREIGN KEY (course_id) REFERENCES course(course_id),
+    FOREIGN KEY (user_id) REFERENCES user(user_id),
+    FOREIGN KEY (role_id) REFERENCES role_master(role_id),
+    FOREIGN KEY (assigned_by) REFERENCES user(user_id)
+);
+
+-- 모듈 활성화 이력
+CREATE TABLE course_module_config (
+    config_id INT PRIMARY KEY AUTO_INCREMENT,
+    course_id INT NOT NULL,
+    module_name VARCHAR(50) NOT NULL, -- 'AI_TOOL', 'IDE', 'VM', 'ASSIGNMENT', 'EVALUATION', 'SURVEY', etc.
+    is_enabled BOOLEAN DEFAULT TRUE,
+    configured_by INT,
+    configured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (course_id) REFERENCES course(course_id),
+    FOREIGN KEY (configured_by) REFERENCES user(user_id)
+);
+
+-- 권한 변경 이력 (감사용)
+CREATE TABLE role_change_history (
+    history_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    course_id INT,
+    old_role_id INT,
+    new_role_id INT NOT NULL,
+    changed_by INT,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reason TEXT,
+    FOREIGN KEY (user_id) REFERENCES user(user_id),
+    FOREIGN KEY (course_id) REFERENCES course(course_id),
+    FOREIGN KEY (old_role_id) REFERENCES role_master(role_id),
+    FOREIGN KEY (new_role_id) REFERENCES role_master(role_id),
+    FOREIGN KEY (changed_by) REFERENCES user(user_id)
+);
+        </pre>
+
+        <h3>7-2. 교육담당자 접근 범위 제어</h3>
+        <pre style="background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto;">
+-- 회사-과정 매핑
+CREATE TABLE company_course_mapping (
+    mapping_id INT PRIMARY KEY AUTO_INCREMENT,
+    company_id INT NOT NULL,
+    course_id INT NOT NULL,
+    contract_start_date DATE,
+    contract_end_date DATE,
+    FOREIGN KEY (company_id) REFERENCES company(company_id),
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+);
+
+-- 교육담당자-회사 매핑
+CREATE TABLE edu_manager_company (
+    manager_id INT NOT NULL, -- user_id
+    company_id INT NOT NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (manager_id, company_id),
+    FOREIGN KEY (manager_id) REFERENCES user(user_id),
+    FOREIGN KEY (company_id) REFERENCES company(company_id)
+);
+        </pre>
+
+        <h3>7-3. 향후 확장 대비</h3>
+        <div class="note-box">
+            <strong>PM과 운영자 분리 준비</strong><br>
+            현재는 <code>PM_OPERATOR</code>로 통합하지만, <code>parent_role_id</code>를 통해 향후 다음과 같이 분리 가능:
+            <ul style="margin-top: 10px;">
+                <li><code>PM</code>: 과정 기획 및 전체 관리</li>
+                <li><code>OPERATOR</code>: 과정 운영 지원 (PM의 하위 권한)</li>
+            </ul>
+            권한 변경 이력은 <code>role_change_history</code> 테이블에 자동 기록됩니다.
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid #e0e0e0;">
+        
+        <p style="text-align: center; color: #666; font-size: 14px;">
+            © 2025 AI실습플랫폼 권한 설계 문서 v2.0
+        </p>
+    </div>
 </body>
 </html>
