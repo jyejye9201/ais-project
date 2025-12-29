@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 관리자 화면 - AI실습플랫폼</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+        }
+
+        /* 헤더 */
+        .header {
+            background: #1a1a1a;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .logo {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: -0.5px;
+        }
+
+        .system-info h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .system-meta {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #2a2a2a;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #51cf66;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(81, 207, 102, 0.7); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(81, 207, 102, 0); }
+        }
+
+        .header-profile {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* 레이아웃 */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 73px);
+        }
+
+        /* 네비게이션 */
+        .sidebar {
+            width: 260px;
+            background: #1a1a1a;
+            border-right: 1px solid #2a2a2a;
+            padding: 24px 0;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+            padding: 0 16px;
+        }
+
+        .nav-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 15px;
+            font-weight: 500;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover {
+            background: #2a2a2a;
+            color: #e0e0e0;
+        }
+
+        .nav-item.active {
+            background: #3a2a2a;
+            color: #fa709a;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: #fa709a;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* 메인 콘텐츠 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+            background: #0f0f0f;
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+        }
+
+        .page-description {
+            font-size: 15px;
+            color: #888;
+        }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            border-left: 4px solid #fa709a;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: #3a3a3a;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #888;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #e0e0e0;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-trend {
+            font-size: 13px;
+            color: #51cf66;
+            font-weight: 600;
+        }
+
+        .stat-trend.warning {
+            color: #ffa94d;
+        }
+
+        .stat-trend.critical {
+            color: #ff6b6b;
+        }
+
+        /* 카드 */
+        .card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 24px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e0e0e0;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* 버튼 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #fa709a;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e95f89;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);
+        }
+
+        .btn-secondary {
+            background: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #3a3a3a;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a3a;
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+
+        /* 리소스 모니터 */
+        .resource-monitor {
+            background: #1a1a1a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .resource-item {
+            margin-bottom: 24px;
+        }
+
+        .resource-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .resource-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .resource-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .resource-value {
+            font-size: 15px;
+            color: #888;
+        }
+
+        .resource-bar {
+            height: 12px;
+            background: #2a2a2a;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .resource-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .resource-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .resource-fill.healthy {
+            background: linear-gradient(90deg, #51cf66, #40c057);
+        }
+
+        .resource-fill.warning {
+            background: linear-gradient(90deg, #ffa94d, #ff8c42);
+        }
+
+        .resource-fill.critical {
+            background: linear-gradient(90deg, #ff6b6b, #fa5252);
+        }
+
+        /* AI 도구 그리드 */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .tool-card {
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            padding: 20px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .tool-card:hover {
+            border-color: #3a3a3a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tool-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .tool-info {
+            flex: 1;
+        }
+
+        .tool-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e0e0e0;
+            margin-bottom: 2px;
+        }
+
+        .tool-type {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .tool-description {
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .tool-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #2a2a2a;
+        }
+
+        .tool-usage {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .tool-status {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+        }
+
+        .status-inactive {
+            background: rgba(173, 181, 189, 0.2);
+            color: #adb5bd;
+        }
+
+        /* 시스템 공지 */
+        .notice-form {
+            max-width: 800px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #fa709a;
+            box-shadow: 0 0 0 3px rgba(250, 112, 154, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-help {
+            font-size: 13px;
+            color: #888;
+            margin-top: 6px;
+        }
+
+        /* 토글 */
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #2a2a2a;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .toggle-info {
+            flex: 1;
+        }
+
+        .toggle-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .toggle-description {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: #3a3a3a;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #fa709a;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            left: 26px;
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .empty-description {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">AI LABS</div>
+            <div class="system-info">
+                <h1>시스템 관리자 콘솔</h1>
+                <div class="system-meta">관리자: 최시스템 · 전체 플랫폼 관리</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="system-status">
+                <span class="status-dot"></span>
+                <span>시스템 정상</span>
+            </div>
+            <div class="header-profile">최</div>
+        </div>
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="main-container">
+        <!-- 사이드바 -->
+        <div class="sidebar">
+            <div class="nav-section">
+                <div class="nav-title">시스템 현황</div>
+                <div class="nav-item active" data-section="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>대시보드</span>
+                </div>
+                <div class="nav-item" data-section="resources">
+                    <span class="nav-icon">💻</span>
+                    <span>리소스</span>
+                </div>
+                <div class="nav-item" data-section="users">
+                    <span class="nav-icon">👥</span>
+                    <span>사용자</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">인프라</div>
+                <div class="nav-item" data-section="ai-tools">
+                    <span class="nav-icon">🤖</span>
+                    <span>AI 도구</span>
+                </div>
+                <div class="nav-item" data-section="libraries">
+                    <span class="nav-icon">📚</span>
+                    <span>라이브러리</span>
+                </div>
+                <div class="nav-item" data-section="vm-templates">
+                    <span class="nav-icon">🖥️</span>
+                    <span>VM 템플릿</span>
+                </div>
+                <div class="nav-item" data-section="ai-tutor">
+                    <span class="nav-icon">🎓</span>
+                    <span>AI Tutor</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">시스템</div>
+                <div class="nav-item" data-section="notices">
+                    <span class="nav-icon">📢</span>
+                    <span>시스템 공지</span>
+                </div>
+                <div class="nav-item" data-section="chat">
+                    <span class="nav-icon">💬</span>
+                    <span>채팅 워크스페이스</span>
+                </div>
+                <div class="nav-item" data-section="permissions">
+                    <span class="nav-icon">🔐</span>
+                    <span>권한 관리</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">로그</div>
+                <div class="nav-item" data-section="logs">
+                    <span class="nav-icon">📝</span>
+                    <span>시스템 로그</span>
+                </div>
+                <div class="nav-item" data-section="errors">
+                    <span class="nav-icon">⚠️</span>
+                    <span>에러 리포트</span>
+                    <span class="nav-badge">3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 콘텐츠 -->
+        <div class="content">
+            <!-- 1. 대시보드 -->
+            <div class="content-section active" id="dashboard">
+                <div class="page-header">
+                    <h2 class="page-title">시스템 관리 대시보드</h2>
+                    <p class="page-description">전체 플랫폼 상태를 모니터링합니다</p>
+                </div>
+
+                <!-- 통계 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">전체 사용자</div>
+                        <div class="stat-value">1,247명</div>
+                        <div class="stat-trend">활성: 342명 (27.4%)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">진행 중인 과정</div>
+                        <div class="stat-value">23개</div>
+                        <div class="stat-trend">모두 정상 운영</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">시스템 가동률</div>
+                        <div class="stat-value">99.8%</div>
+                        <div class="stat-trend">지난 30일 평균</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">리소스 사용률</div>
+                        <div class="stat-value">72%</div>
+                        <div class="stat-trend warning">모니터링 필요</div>
+                    </div>
+                </div>
+
+                <!-- 실시간 리소스 모니터링 -->
+                <div class="resource-monitor">
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 24px; color: #e0e0e0;">
+                        💻 실시간 리소스 모니터링
+                    </h3>
+                    
+                    <div class="resource-item">
+                        <div class="resource-header">
+                            <span class="resource-label">CPU 사용률</span>
+                            <span class="resource-value">68% (34 / 50 Cores)</span>
+                        </div>
+                        <div class="resource-bar">
+                            <div class="resource-fill healthy" style="width: 68%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="resource-item">
+                        <div class="resource-header">
+                            <span class="resource-label">메모리 사용률</span>
+                            <span class="resource-value">82% (164 / 200 GB)</span>
+                        </div>
+                        <div class="resource-bar">
+                            <div class="resource-fill warning" style="width: 82%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="resource-item">
+                        <div class="resource-header">
+                            <span class="resource-label">디스크 사용률</span>
+                            <span class="resource-value">45% (4.5 / 10 TB)</span>
+                        </div>
+                        <div class="resource-bar">
+                            <div class="resource-fill healthy" style="width: 45%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="resource-item">
+                        <div class="resource-header">
+                            <span class="resource-label">네트워크 대역폭</span>
+                            <span class="resource-value">32% (3.2 / 10 Gbps)</span>
+                        </div>
+                        <div class="resource-bar">
+                            <div class="resource-fill healthy" style="width: 32%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="resource-item">
+                        <div class="resource-header">
+                            <span class="resource-label">GPU 사용률</span>
+                            <span class="resource-value">88% (14 / 16 GPUs)</span>
+                        </div>
+                        <div class="resource-bar">
+                            <div class="resource-fill warning" style="width: 88%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. AI 도구 관리 -->
+            <div class="content-section" id="ai-tools">
+                <div class="page-header">
+                    <h2 class="page-title">AI 도구 마스터 리스트</h2>
+                    <p class="page-description">과정에서 사용할 수 있는 AI 도구를 관리합니다</p>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <button class="btn btn-primary">+ 새 AI 도구 추가</button>
+                </div>
+
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon">🤖</div>
+                            <div class="tool-info">
+                                <div class="tool-name">ChatGPT</div>
+                                <div class="tool-type">텍스트 생성</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            대화형 AI로 질문 답변 및 텍스트 생성
+                        </div>
+                        <div class="tool-stats">
+                            <div class="tool-usage">사용: 18개 과정</div>
+                            <div class="tool-status status-active">활성</div>
+                        </div>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon">🎨</div>
+                            <div class="tool-info">
+                                <div class="tool-name">Midjourney</div>
+                                <div class="tool-type">이미지 생성</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            고품질 AI 이미지 생성 도구
+                        </div>
+                        <div class="tool-stats">
+                            <div class="tool-usage">사용: 12개 과정</div>
+                            <div class="tool-status status-active">활성</div>
+                        </div>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon">💻</div>
+                            <div class="tool-info">
+                                <div class="tool-name">Cursor</div>
+                                <div class="tool-type">코드 생성</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            AI 페어 프로그래밍 IDE
+                        </div>
+                        <div class="tool-stats">
+                            <div class="tool-usage">사용: 15개 과정</div>
+                            <div class="tool-status status-active">활성</div>
+                        </div>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon">📓</div>
+                            <div class="tool-info">
+                                <div class="tool-name">NotebookLM</div>
+                                <div class="tool-type">텍스트 분석</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            문서 기반 AI 노트 및 요약
+                        </div>
+                        <div class="tool-stats">
+                            <div class="tool-usage">사용: 8개 과정</div>
+                            <div class="tool-status status-active">활성</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 라이브러리 관리 -->
+            <div class="content-section" id="libraries">
+                <div class="page-header">
+                    <h2 class="page-title">라이브러리 관리</h2>
+                    <p class="page-description">시스템 전체에서 사용되는 라이브러리를 관리합니다</p>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <button class="btn btn-primary">+ 라이브러리 추가</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-body" style="padding: 0;">
+                        <div style="padding: 20px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 16px; font-weight: 700; color: #e0e0e0; margin-bottom: 4px;">PyTorch</div>
+                                <div style="font-size: 13px; color: #888;">버전 2.1.0 · Python 3.10 · 15개 과정 사용중</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm">업데이트</button>
+                                <button class="btn btn-secondary btn-sm">설정</button>
+                            </div>
+                        </div>
+                        <div style="padding: 20px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 16px; font-weight: 700; color: #e0e0e0; margin-bottom: 4px;">TensorFlow</div>
+                                <div style="font-size: 13px; color: #888;">버전 2.15.0 · Python 3.10 · 12개 과정 사용중</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm">업데이트</button>
+                                <button class="btn btn-secondary btn-sm">설정</button>
+                            </div>
+                        </div>
+                        <div style="padding: 20px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 16px; font-weight: 700; color: #e0e0e0; margin-bottom: 4px;">Transformers</div>
+                                <div style="font-size: 13px; color: #888;">버전 4.36.0 · Python 3.10 · 18개 과정 사용중</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm">업데이트</button>
+                                <button class="btn btn-secondary btn-sm">설정</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 시스템 공지 -->
+            <div class="content-section" id="notices">
+                <div class="page-header">
+                    <h2 class="page-title">시스템 공지사항</h2>
+                    <p class="page-description">전체 사용자에게 시스템 공지를 전달합니다</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">새 공지 작성</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="notice-form">
+                            <div class="form-group">
+                                <label class="form-label">공지 유형</label>
+                                <select class="form-select">
+                                    <option>시스템 점검</option>
+                                    <option>업데이트 안내</option>
+                                    <option>긴급 공지</option>
+                                    <option>일반 공지</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">제목</label>
+                                <input type="text" class="form-input" placeholder="공지사항 제목을 입력하세요">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">내용</label>
+                                <textarea class="form-textarea" placeholder="공지사항 내용을 입력하세요"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">게시 기간</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <input type="date" class="form-input" value="2024-12-29">
+                                    <input type="date" class="form-input" value="2025-01-05">
+                                </div>
+                                <div class="form-help">게시 시작일과 종료일을 설정하세요</div>
+                            </div>
+                            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                                <button class="btn btn-secondary">취소</button>
+                                <button class="btn btn-primary">게시하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. 채팅 워크스페이스 -->
+            <div class="content-section" id="chat">
+                <div class="page-header">
+                    <h2 class="page-title">채팅 워크스페이스 관리</h2>
+                    <p class="page-description">과정별 채팅 워크스페이스를 생성하고 관리합니다</p>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <button class="btn btn-primary">+ 새 워크스페이스 생성</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">워크스페이스 설정</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">워크스페이스 이름</label>
+                            <input type="text" class="form-input" placeholder="예: LLM 101 #3 채팅방">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">연결할 과정</label>
+                            <select class="form-select">
+                                <option>선택하세요</option>
+                                <option>LLM 파인튜닝 실습 (LLM 101 #3)</option>
+                                <option>Python 데이터 분석</option>
+                                <option>딥러닝 기초</option>
+                            </select>
+                        </div>
+                        <div class="toggle-group">
+                            <div class="toggle-info">
+                                <div class="toggle-label">자동 사용자 초대</div>
+                                <div class="toggle-description">과정 참여자를 자동으로 워크스페이스에 초대</div>
+                            </div>
+                            <div class="toggle-switch active">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                        <div class="toggle-group">
+                            <div class="toggle-info">
+                                <div class="toggle-label">파일 공유 허용</div>
+                                <div class="toggle-description">채팅에서 파일 업로드 및 공유 가능</div>
+                            </div>
+                            <div class="toggle-switch active">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                            <button class="btn btn-secondary">취소</button>
+                            <button class="btn btn-primary">워크스페이스 생성</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 나머지 섹션들 -->
+            <div class="content-section" id="resources">
+                <div class="page-header">
+                    <h2 class="page-title">리소스 모니터링</h2>
+                    <p class="page-description">시스템 리소스 사용 현황을 모니터링합니다</p>
+                </div>
+                <div class="empty-state">
+                    <div class="empty-icon">💻</div>
+                    <div class="empty-title">상세 리소스 모니터링</div>
+                    <div class="empty-description">CPU, 메모리, 디스크, 네트워크 상세 분석</div>
+                </div>
+            </div>
+
+            <div class="content-section" id="users">
+                <div class="page-header">
+                    <h2 class="page-title">사용자 관리</h2>
+                    <p class="page-description">전체 사용자를 관리합니다</p>
+                </div>
+            </div>
+
+            <div class="content-section" id="vm-templates">
+                <div class="page-header">
+                    <h2 class="page-title">VM 템플릿</h2>
+                    <p class="page-description">재사용 가능한 VM 템플릿을 관리합니다</p>
+                </div>
+            </div>
+
+            <div class="content-section" id="ai-tutor">
+                <div class="page-header">
+                    <h2 class="page-title">AI Tutor 설정</h2>
+                    <p class="page-description">AI Tutor의 동작을 설정합니다</p>
+                </div>
+            </div>
+
+            <div class="content-section" id="permissions">
+                <div class="page-header">
+                    <h2 class="page-title">권한 관리</h2>
+                    <p class="page-description">사용자 권한을 관리합니다</p>
+                </div>
+            </div>
+
+            <div class="content-section" id="logs">
+                <div class="page-header">
+                    <h2 class="page-title">시스템 로그</h2>
+                    <p class="page-description">시스템 활동 로그를 확인합니다</p>
+                </div>
+            </div>
+
+            <div class="content-section" id="errors">
+                <div class="page-header">
+                    <h2 class="page-title">에러 리포트</h2>
+                    <p class="page-description">시스템 에러를 분석하고 해결합니다</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 네비게이션
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                const sectionId = this.getAttribute('data-section');
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // 토글 스위치
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
+</html>
